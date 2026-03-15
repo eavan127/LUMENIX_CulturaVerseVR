@@ -31,3 +31,6 @@ AI/*.log
 # Python cache
 AI/__pycache__/
 AI/*.pyc
+
+Assets/*.wav
+Assets/*.mp3
