@@ -34,3 +34,5 @@ AI/*.pyc
 
 Assets/*.wav
 Assets/*.mp3
+Assets/StreamingAssets/config.json
+Assets/StreamingAssets/config.json.meta
