@@ -10,10 +10,17 @@ public class VoiceRecorder : MonoBehaviour
     private AudioClip clip;
     private bool recording = false;
 
+    void Start()
+    {
+        UnityEngine.Debug.Log("VoiceRecorder script started");
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            UnityEngine.Debug.Log("SPACE pressed");
+
             if (!recording)
                 StartRecording();
             else
@@ -38,7 +45,7 @@ public class VoiceRecorder : MonoBehaviour
 
         UnityEngine.Debug.Log("Saved to: " + path);
 
-        RunSpeechToText(); // run whisper
+        RunSpeechToText();
     }
 
     void RunSpeechToText()
@@ -59,14 +66,16 @@ public class VoiceRecorder : MonoBehaviour
 
         string output = process.StandardOutput.ReadToEnd();
         string error = process.StandardError.ReadToEnd();
+
         process.WaitForExit();
 
-        UnityEngine.Debug.Log("PYTHON OUTPUT:\n" + output);
-        UnityEngine.Debug.Log("PYTHON ERROR:\n" + error);
+        string combined = output + "\n" + error;
+
+        UnityEngine.Debug.Log("PYTHON LOG:\n" + combined);
 
         string userText = "";
 
-        foreach (string line in output.Split('\n'))
+        foreach (string line in combined.Split('\n'))
         {
             if (line.StartsWith("TRANSCRIPTION:"))
             {
@@ -87,11 +96,12 @@ public class VoiceRecorder : MonoBehaviour
     {
         string url = "http://localhost:11434/api/generate";
 
-        string prompt = "You are Yue Fei (岳飞), a loyal Song Dynasty general. Answer the player question: " + question;
+        string prompt = "You are Yue Fei (岳飞), a loyal Song Dynasty general. Answer briefly in character in under 25 words: " + question;
 
         string json = "{\"model\":\"gemma3:4b\",\"prompt\":\"" + prompt + "\",\"stream\":false}";
 
         UnityWebRequest request = new UnityWebRequest(url, "POST");
+
         byte[] body = Encoding.UTF8.GetBytes(json);
 
         request.uploadHandler = new UploadHandlerRaw(body);
@@ -107,6 +117,64 @@ public class VoiceRecorder : MonoBehaviour
         int end = responseJson.IndexOf("\",", start);
 
         string aiText = responseJson.Substring(start, end - start);
+
+        aiText = aiText.Replace("\\n", " ");
+        aiText = aiText.Replace("\"", "");
+
+        UnityEngine.Debug.Log("Yue Fei says: " + aiText);
+
+        GenerateVoice(aiText);
+
+        StartCoroutine(PlayVoice());
+    }
+
+    void GenerateVoice(string text)
+    {
+        ProcessStartInfo start = new ProcessStartInfo();
+
+        start.FileName = "python";
+
+        // remove problematic characters
+        text = text.Replace("\"", "");
+        text = text.Replace("\n", " ");
+
+        start.Arguments = "C:/AI/tts.py \"" + text + "\"";
+
+        start.UseShellExecute = false;
+        start.CreateNoWindow = true;
+
+        Process.Start(start);
+    }
+
+    IEnumerator PlayVoice()
+    {
+        string filePath = "C:/AI/yuefei_voice.mp3";
+
+        // Wait until Python creates the file
+        while (!File.Exists(filePath))
+        {
+            yield return null;
+        }
+
+        string path = "file:///" + filePath;
+
+        using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.MPEG))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                UnityEngine.Debug.LogError(www.error);
+            }
+            else
+            {
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+
+                AudioSource audio = GetComponent<AudioSource>();
+                audio.clip = clip;
+                audio.Play();
+            }
+        }
     }
 
     void SaveWav(string filepath, AudioClip clip)
