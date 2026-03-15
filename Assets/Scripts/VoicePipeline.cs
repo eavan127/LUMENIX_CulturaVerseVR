@@ -182,7 +182,9 @@ public class VoicePipeline : MonoBehaviour
 
         foreach (var sample in samples)
         {
-            short value = (short)(sample * short.MaxValue);
+            // Amplify volume x3 before sending to Google
+            float amplified = Mathf.Clamp(sample * 3f, -1f, 1f);
+            short value = (short)(amplified * short.MaxValue);
             System.BitConverter.GetBytes(value).CopyTo(bytes, offset);
             offset += 2;
         }
