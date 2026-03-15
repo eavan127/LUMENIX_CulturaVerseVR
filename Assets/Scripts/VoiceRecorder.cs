@@ -104,7 +104,11 @@ public class VoiceRecorder : MonoBehaviour
     {
         string url = "http://localhost:11434/api/generate";
 
-        string prompt = "You are Yue Fei (岳飞), a loyal Song Dynasty general. Answer briefly in character in under 25 words: " + question;
+        string prompt = "You are Yue Fei (岳飞), a loyal Song Dynasty general. "
+              + "If the user speaks Chinese, reply in Chinese. "
+              + "If the user speaks English, reply in English. "
+              + "Answer in under 25 words: "
+              + question;
 
         string json = "{\"model\":\"gemma3:4b\",\"prompt\":\"" + prompt + "\",\"stream\":false}";
 
