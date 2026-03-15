@@ -9,6 +9,7 @@ public class VoiceRecorder : MonoBehaviour
 {
     private AudioClip clip;
     private bool recording = false;
+    string AI_FOLDER = Application.dataPath + "/../AI/";
 
     void Start()
     {
@@ -30,7 +31,14 @@ public class VoiceRecorder : MonoBehaviour
 
     void StartRecording()
     {
-        clip = Microphone.Start(null, false, 10, 44100);
+        if (Microphone.devices.Length > 0)
+        {
+            clip = Microphone.Start(null, false, 10, 44100);
+        }
+        else
+        {
+            UnityEngine.Debug.LogError("No microphone detected");
+        }
         recording = true;
         UnityEngine.Debug.Log("Recording...");
     }
@@ -40,7 +48,7 @@ public class VoiceRecorder : MonoBehaviour
         Microphone.End(null);
         recording = false;
 
-        string path = Application.dataPath + "/question.wav";
+        string path = AI_FOLDER + "question.wav";
         SaveWav(path, clip);
 
         UnityEngine.Debug.Log("Saved to: " + path);
@@ -51,7 +59,7 @@ public class VoiceRecorder : MonoBehaviour
     void RunSpeechToText()
     {
         string python = "python";
-        string script = "C:/AI/speech_to_text.py";
+        string script = AI_FOLDER + "speech_to_text.py";
         string audio = Application.dataPath + "/question.wav";
 
         ProcessStartInfo start = new ProcessStartInfo();
@@ -64,10 +72,10 @@ public class VoiceRecorder : MonoBehaviour
 
         Process process = Process.Start(start);
 
+        process.WaitForExit(10000);
+
         string output = process.StandardOutput.ReadToEnd();
         string error = process.StandardError.ReadToEnd();
-
-        process.WaitForExit();
 
         string combined = output + "\n" + error;
 
@@ -138,7 +146,7 @@ public class VoiceRecorder : MonoBehaviour
         text = text.Replace("\"", "");
         text = text.Replace("\n", " ");
 
-        start.Arguments = "C:/AI/tts.py \"" + text + "\"";
+        start.Arguments = AI_FOLDER + "tts.py \"" + text + "\"";
 
         start.UseShellExecute = false;
         start.CreateNoWindow = true;
@@ -148,7 +156,7 @@ public class VoiceRecorder : MonoBehaviour
 
     IEnumerator PlayVoice()
     {
-        string filePath = "C:/AI/yuefei_voice.mp3";
+        string filePath = AI_FOLDER + "yuefei_voice.mp3";
 
         // Wait until Python creates the file
         while (!File.Exists(filePath))

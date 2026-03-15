@@ -22,3 +22,12 @@ Builds/
 *.mdb
 *.opendb
 *.VC.db
+
+# AI runtime files
+AI/*.wav
+AI/*.mp3
+AI/*.log
+
+# Python cache
+AI/__pycache__/
+AI/*.pyc
