@@ -13,6 +13,7 @@ public class VoiceRecorder : MonoBehaviour
 
     void Start()
     {
+        Directory.CreateDirectory(AI_FOLDER);
         UnityEngine.Debug.Log("VoiceRecorder script started");
     }
 
@@ -60,7 +61,7 @@ public class VoiceRecorder : MonoBehaviour
     {
         string python = "python";
         string script = AI_FOLDER + "speech_to_text.py";
-        string audio = Application.dataPath + "/question.wav";
+        string audio = AI_FOLDER + "question.wav";
 
         ProcessStartInfo start = new ProcessStartInfo();
         start.FileName = python;
@@ -146,11 +147,10 @@ public class VoiceRecorder : MonoBehaviour
 
         start.FileName = "python";
 
-        // remove problematic characters
         text = text.Replace("\"", "");
         text = text.Replace("\n", " ");
 
-        start.Arguments = AI_FOLDER + "tts.py \"" + text + "\"";
+        start.Arguments = $"\"{AI_FOLDER}tts.py\" \"{text}\"";
 
         start.UseShellExecute = false;
         start.CreateNoWindow = true;
@@ -162,10 +162,19 @@ public class VoiceRecorder : MonoBehaviour
     {
         string filePath = AI_FOLDER + "yuefei_voice.mp3";
 
-        // Wait until Python creates the file
-        while (!File.Exists(filePath))
+        float timeout = 10f;
+        float timer = 0f;
+
+        while (!File.Exists(filePath) && timer < timeout)
         {
+            timer += Time.deltaTime;
             yield return null;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            UnityEngine.Debug.LogError("Voice file not created.");
+            yield break;
         }
 
         string path = "file:///" + filePath;

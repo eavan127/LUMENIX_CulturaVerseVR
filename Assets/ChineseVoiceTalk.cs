@@ -9,17 +9,18 @@ public class ChineseVoiceTalk : MonoBehaviour
 
     IEnumerator Start()
     {
+        // Wait 2 seconds after entering environment
         yield return new WaitForSeconds(2f);
 
-        animator.SetTrigger("Talk");
-
+        // Start talking animation + play voice
+        animator.SetBool("IsTalking", true);
         audioSource.clip = voiceClip;
         audioSource.Play();
 
         // Wait until the voice finishes
         yield return new WaitWhile(() => audioSource.isPlaying);
 
-        // Return to idle animation
-        animator.Play("Animation");
+        // Return to idle
+        animator.SetBool("IsTalking", false);
     }
 }
